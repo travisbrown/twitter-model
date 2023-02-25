@@ -1,0 +1,1213 @@
+{
+    "type": "object",
+    "title": "api_object",
+    "oneOf": [
+        {
+            "$ref": "#/definitions/status"
+        },
+        {
+            "$ref": "#/definitions/user"
+        },
+        {
+            "$ref": "#/definitions/search_results"
+        },
+        {
+            "$ref": "#/definitions/deletion"
+        }
+    ],
+    "definitions": {
+        "id": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18446744073709551614
+        },
+        "id_nullable": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/id"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "id_str": {
+            "type": "string",
+            "pattern": "^\\d+$"
+        },
+        "id_str_nullable": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/id_str"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967294
+        },
+        "range": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967294
+            },
+            "minItems": 2,
+            "maxItems": 2,
+            "$comment": "TODO: Use prefixItems once supported by Typify"
+        },
+        "coordinates": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "withheld_scope": {
+            "enum": [
+                "status",
+                "user"
+            ]
+        },
+        "deletion": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "delete": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "status": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "id": {
+                                    "$ref": "#/definitions/id"
+                                },
+                                "id_str": {
+                                    "$ref": "#/definitions/id_str"
+                                },
+                                "user_id": {
+                                    "$ref": "#/definitions/id"
+                                },
+                                "user_id_str": {
+                                    "$ref": "#/definitions/id_str"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "id_str",
+                                "user_id",
+                                "user_id_str"
+                            ]
+                        },
+                        "timestamp_ms": {
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                        }
+                    },
+                    "required": [
+                        "status"
+                    ]
+                }
+            },
+            "required": [
+                "delete"
+            ]
+        },
+        "status": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/id"
+                },
+                "id_str": {
+                    "$ref": "#/definitions/id_str"
+                },
+                "user": {
+                    "$ref": "#/definitions/user"
+                },
+                "retweeted_status": {
+                    "$ref": "#/definitions/status",
+                    "$comment": "Not required"
+                },
+                "quoted_status_id": {
+                    "$ref": "#/definitions/id",
+                    "$comment": "Not required"
+                },
+                "quoted_status_id_str": {
+                    "$ref": "#/definitions/id_str",
+                    "$comment": "Not required"
+                },
+                "quoted_status_permalink": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "expanded": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "display": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "url",
+                        "expanded",
+                        "display"
+                    ],
+                    "$comment": "Not required"
+                },
+                "quoted_status": {
+                    "$ref": "#/definitions/status",
+                    "$comment": "Not required"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "timestamp_ms": {
+                    "type": "string",
+                    "pattern": "^\\d+$",
+                    "$comment": "Not required because it does not appear in older statuses"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "full_text": {
+                    "type": "string"
+                },
+                "retweet_count": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/count"
+                        },
+                        {
+                            "const": "100+"
+                        }
+                    ]
+                },
+                "favorite_count": {
+                    "$ref": "#/definitions/count",
+                    "$comment": "Not required because it does not appear in older statuses"
+                },
+                "extended_tweet": {
+                    "$ref": "#/definitions/extended_tweet"
+                },
+                "entities": {
+                    "$ref": "#/definitions/entities"
+                },
+                "extended_entities": {
+                    "$ref": "#/definitions/extended_entities"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "scopes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "followers": {
+                            "type": "boolean"
+                        },
+                        "place_ids": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [],
+                    "$comment": "Not required because it does not appear in older statuses"
+                },
+                "filter_level": {
+                    "enum": [
+                        "low"
+                    ],
+                    "$comment": "Not required because it does not appear in older statuses"
+                },
+                "in_reply_to_status_id": {
+                    "$ref": "#/definitions/id_nullable"
+                },
+                "in_reply_to_status_id_str": {
+                    "$ref": "#/definitions/id_str_nullable"
+                },
+                "in_reply_to_user_id": {
+                    "$ref": "#/definitions/id_nullable"
+                },
+                "in_reply_to_user_id_str": {
+                    "$ref": "#/definitions/id_str_nullable"
+                },
+                "in_reply_to_screen_name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "truncated": {
+                    "type": "boolean"
+                },
+                "favorited": {
+                    "type": "boolean"
+                },
+                "retweeted": {
+                    "type": "boolean"
+                },
+                "possibly_sensitive": {
+                    "type": "boolean"
+                },
+                "is_quote_status": {
+                    "type": "boolean",
+                    "$comment": "Not required because it does not appear in older statuses"
+                },
+                "lang": {
+                    "type": "string",
+                    "$comment": "Not required because it does not appear in some statuses"
+                },
+                "display_text_range": {
+                    "$ref": "#/definitions/range",
+                    "$comment": "Not required because it does not appear in some statuses"
+                },
+                "withheld_scope": {
+                    "$ref": "#/definitions/withheld_scope"
+                },
+                "withheld_copyright": {
+                    "const": true
+                },
+                "withheld_in_countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "$comment": "Not required because it does not appear in some statuses"
+                },
+                "contributors": {
+                    "type": "null"
+                },
+                "geo": {
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/point"
+                        }
+                    ]
+                },
+                "place": {
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/place"
+                        }
+                    ]
+                },
+                "coordinates": {
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/point"
+                        }
+                    ]
+                },
+                "metadata": {
+                    "description": "Only included in search API results",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "iso_language_code": {
+                            "type": "string"
+                        },
+                        "result_type": {
+                            "enum": [
+                                "mixed",
+                                "recent",
+                                "popular"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "iso_language_code",
+                        "result_type"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "id_str",
+                "created_at",
+                "source",
+                "in_reply_to_status_id",
+                "in_reply_to_status_id_str",
+                "in_reply_to_user_id",
+                "in_reply_to_user_id_str",
+                "in_reply_to_screen_name",
+                "truncated",
+                "favorited",
+                "retweeted",
+                "contributors",
+                "geo",
+                "place",
+                "coordinates"
+            ]
+        },
+        "user": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/id"
+                },
+                "id_str": {
+                    "$ref": "#/definitions/id_str"
+                },
+                "screen_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "url": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "format": "uri"
+                },
+                "lang": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "time_zone": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "utc_offset": {
+                    "oneOf": [
+                        {
+                            "type": "integer",
+                            "minimum": -2147483648,
+                            "maximum": 2147483647
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "followers_count": {
+                    "$ref": "#/definitions/count"
+                },
+                "friends_count": {
+                    "$ref": "#/definitions/count"
+                },
+                "statuses_count": {
+                    "$ref": "#/definitions/count"
+                },
+                "favourites_count": {
+                    "$ref": "#/definitions/count"
+                },
+                "listed_count": {
+                    "$ref": "#/definitions/count"
+                },
+                "verified": {
+                    "type": "boolean"
+                },
+                "protected": {
+                    "type": "boolean"
+                },
+                "default_profile": {
+                    "type": "boolean"
+                },
+                "default_profile_image": {
+                    "type": "boolean"
+                },
+                "profile_use_background_image": {
+                    "type": "boolean"
+                },
+                "profile_background_tile": {
+                    "type": "boolean"
+                },
+                "show_all_inline_media": {
+                    "type": "boolean",
+                    "$comment": "Not required because it does not appear in newer profiles"
+                },
+                "is_translator": {
+                    "type": "boolean"
+                },
+                "geo_enabled": {
+                    "type": "boolean"
+                },
+                "contributors_enabled": {
+                    "type": "boolean"
+                },
+                "is_translation_enabled": {
+                    "type": "boolean",
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "has_extended_profile": {
+                    "type": "boolean",
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "profile_image_url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "profile_image_url_https": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "profile_background_image_url": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "format": "uri"
+                },
+                "profile_background_image_url_https": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "format": "uri"
+                },
+                "profile_banner_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "profile_text_color": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{6}$"
+                },
+                "profile_link_color": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{6}$"
+                },
+                "profile_background_color": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{6}$"
+                },
+                "profile_sidebar_fill_color": {
+                    "type": "string",
+                    "pattern": "^([0-9a-fA-F]{6})?$"
+                },
+                "profile_sidebar_border_color": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{6}$"
+                },
+                "notifications": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "following": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "follow_request_sent": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "translator_type": {
+                    "enum": [
+                        "none",
+                        "regular",
+                        "badged",
+                        "moderator"
+                    ],
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "withheld_scope": {
+                    "$ref": "#/definitions/withheld_scope"
+                },
+                "withheld_in_countries": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "entities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "url": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "urls": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/url"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "urls"
+                            ]
+                        },
+                        "description": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "urls": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/url"
+                                    }
+                                }
+                            },
+                            "required": [
+                                "urls"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "description"
+                    ],
+                    "$comment": "Not required because it does not appear in older profiles"
+                },
+                "status": {
+                    "$ref": "#/definitions/status"
+                },
+                "ext_has_nft_avatar": {
+                    "type": "boolean"
+                },
+                "ext_is_blue_verified": {
+                    "type": "boolean"
+                },
+                "ext_verified_type": {
+                    "enum": [
+                        "Business",
+                        "Government",
+                        "User"
+                    ]
+                },
+                "snapshot": {
+                    "description": "A special non-API field that we use in some tooling to record access time",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551614
+                }
+            },
+            "required": [
+                "id",
+                "id_str",
+                "screen_name",
+                "name",
+                "location",
+                "description",
+                "url",
+                "lang",
+                "time_zone",
+                "utc_offset",
+                "created_at",
+                "followers_count",
+                "friends_count",
+                "statuses_count",
+                "favourites_count",
+                "listed_count",
+                "verified",
+                "protected",
+                "default_profile",
+                "default_profile_image",
+                "profile_use_background_image",
+                "profile_background_tile",
+                "is_translator",
+                "geo_enabled",
+                "contributors_enabled",
+                "profile_image_url",
+                "profile_image_url_https",
+                "profile_background_image_url",
+                "profile_background_image_url_https",
+                "profile_text_color",
+                "profile_link_color",
+                "profile_background_color",
+                "profile_sidebar_fill_color",
+                "profile_sidebar_border_color",
+                "notifications",
+                "following",
+                "follow_request_sent"
+            ]
+        },
+        "url": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "display_url": {
+                    "type": "string"
+                },
+                "expanded_url": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "format": "uri"
+                },
+                "indices": {
+                    "$ref": "#/definitions/range"
+                }
+            },
+            "required": [
+                "url",
+                "expanded_url",
+                "indices"
+            ]
+        },
+        "user_mention": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/id"
+                },
+                "id_str": {
+                    "$ref": "#/definitions/id_str"
+                },
+                "screen_name": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "indices": {
+                    "$ref": "#/definitions/range"
+                }
+            },
+            "required": [
+                "id",
+                "id_str",
+                "screen_name",
+                "name",
+                "indices"
+            ]
+        },
+        "hashtag": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "indices": {
+                    "$ref": "#/definitions/range"
+                }
+            },
+            "required": [
+                "text",
+                "indices"
+            ]
+        },
+        "symbol": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "indices": {
+                    "$ref": "#/definitions/range"
+                }
+            },
+            "required": [
+                "text",
+                "indices"
+            ]
+        },
+        "point": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "const": "Point"
+                },
+                "coordinates": {
+                    "$ref": "#/definitions/coordinates"
+                }
+            },
+            "required": [
+                "type",
+                "coordinates"
+            ]
+        },
+        "polygon": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "const": "Polygon"
+                },
+                "coordinates": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/coordinates"
+                        }
+                    }
+                }
+            },
+            "required": [
+                "type",
+                "coordinates"
+            ]
+        },
+        "place": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "place_type": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "country_code": {
+                    "type": "string"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "contained_within": {
+                    "const": []
+                },
+                "bounding_box": {
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/polygon"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "attributes": {
+                    "const": {}
+                }
+            },
+            "required": [
+                "id",
+                "url",
+                "place_type",
+                "name",
+                "full_name",
+                "country_code",
+                "country",
+                "bounding_box"
+            ]
+        },
+        "media": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "$ref": "#/definitions/id"
+                },
+                "id_str": {
+                    "$ref": "#/definitions/id_str"
+                },
+                "type": {
+                    "enum": [
+                        "photo",
+                        "video",
+                        "animated_gif"
+                    ]
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "display_url": {
+                    "type": "string"
+                },
+                "expanded_url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "media_url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "media_url_https": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "source_status_id": {
+                    "$ref": "#/definitions/id",
+                    "$comment": "Not required because it does not appear in older media objects"
+                },
+                "source_status_id_str": {
+                    "$ref": "#/definitions/id_str",
+                    "$comment": "Not required because it does not appear in older media objects"
+                },
+                "source_user_id": {
+                    "$ref": "#/definitions/id",
+                    "$comment": "Not required because it does not appear in older media objects"
+                },
+                "source_user_id_str": {
+                    "$ref": "#/definitions/id_str",
+                    "$comment": "Not required because it does not appear in older media objects"
+                },
+                "video_info": {
+                    "$ref": "#/definitions/video_info",
+                    "$comment": "Not required because it only appears in video media objects"
+                },
+                "indices": {
+                    "$ref": "#/definitions/range"
+                },
+                "sizes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "thumb": {
+                            "$ref": "#/definitions/size"
+                        },
+                        "small": {
+                            "$ref": "#/definitions/size"
+                        },
+                        "medium": {
+                            "$ref": "#/definitions/size"
+                        },
+                        "large": {
+                            "$ref": "#/definitions/size"
+                        }
+                    },
+                    "required": [
+                        "thumb",
+                        "small",
+                        "medium",
+                        "large"
+                    ]
+                },
+                "additional_media_info": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "embeddable": {
+                            "type": "boolean"
+                        },
+                        "monetizable": {
+                            "type": "boolean"
+                        },
+                        "source_user": {
+                            "$ref": "#/definitions/user"
+                        },
+                        "call_to_actions": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "visit_site": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "required": [
+                                        "url"
+                                    ]
+                                },
+                                "watch_now": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri"
+                                        }
+                                    },
+                                    "required": [
+                                        "url"
+                                    ]
+                                }
+                            },
+                            "required": []
+                        }
+                    },
+                    "required": [
+                        "monetizable"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "id_str",
+                "type",
+                "url",
+                "display_url",
+                "expanded_url",
+                "media_url",
+                "media_url_https",
+                "indices"
+            ]
+        },
+        "video_info": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "duration_millis": {
+                    "$ref": "#/definitions/count"
+                },
+                "aspect_ratio": {
+                    "$ref": "#/definitions/range"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/variant"
+                    }
+                }
+            },
+            "required": [
+                "aspect_ratio",
+                "variants"
+            ]
+        },
+        "size": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "w": {
+                    "$ref": "#/definitions/count"
+                },
+                "h": {
+                    "$ref": "#/definitions/count"
+                },
+                "resize": {
+                    "enum": [
+                        "crop",
+                        "fit"
+                    ]
+                }
+            },
+            "required": [
+                "w",
+                "h",
+                "resize"
+            ]
+        },
+        "variant": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "content_type": {
+                    "enum": [
+                        "video/mp4",
+                        "application/x-mpegURL"
+                    ]
+                },
+                "bitrate": {
+                    "$ref": "#/definitions/count"
+                }
+            },
+            "required": [
+                "url",
+                "content_type"
+            ]
+        },
+        "extended_tweet": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "full_text": {
+                    "type": "string"
+                },
+                "display_text_range": {
+                    "$ref": "#/definitions/range"
+                },
+                "entities": {
+                    "$ref": "#/definitions/entities"
+                },
+                "extended_entities": {
+                    "$ref": "#/definitions/extended_entities"
+                }
+            },
+            "required": [
+                "full_text",
+                "display_text_range",
+                "entities"
+            ]
+        },
+        "entities": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "urls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/url"
+                    }
+                },
+                "user_mentions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user_mention"
+                    }
+                },
+                "hashtags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hashtag"
+                    }
+                },
+                "symbols": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/symbol"
+                    }
+                },
+                "media": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/media"
+                    }
+                }
+            },
+            "required": [
+                "urls",
+                "user_mentions",
+                "hashtags"
+            ]
+        },
+        "extended_entities": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "media": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/media"
+                    }
+                }
+            },
+            "required": [
+                "media"
+            ]
+        },
+        "search_results": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "statuses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/status"
+                    }
+                },
+                "search_metadata": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "query": {
+                            "type": "string"
+                        },
+                        "count": {
+                            "$ref": "#/definitions/count"
+                        },
+                        "max_id": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "max_id_str": {
+                            "$ref": "#/definitions/id_str"
+                        },
+                        "since_id": {
+                            "$ref": "#/definitions/id"
+                        },
+                        "since_id_str": {
+                            "$ref": "#/definitions/id_str"
+                        },
+                        "refresh_url": {
+                            "type": "string"
+                        },
+                        "next_results": {
+                            "type": "string"
+                        },
+                        "completed_in": {
+                            "type": "number",
+                            "$comment": "TODO: Figure out why Typify doesn't allow a minimum value here"
+                        }
+                    },
+                    "required": [
+                        "query",
+                        "count",
+                        "max_id",
+                        "max_id_str",
+                        "since_id",
+                        "since_id_str",
+                        "refresh_url",
+                        "next_results",
+                        "completed_in"
+                    ]
+                }
+            },
+            "required": [
+                "statuses",
+                "search_metadata"
+            ]
+        }
+    }
+}
