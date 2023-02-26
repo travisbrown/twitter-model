@@ -50,6 +50,10 @@
             "minimum": 0,
             "maximum": 4294967294
         },
+        "count_str": {
+            "type": "string",
+            "pattern": "^\\d+$"
+        },
         "range": {
             "type": "array",
             "items": {
@@ -74,6 +78,10 @@
                 "status",
                 "user"
             ]
+        },
+        "color": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{6}|[0-9a-fA-F]{3}|\\s)?$"
         },
         "deletion": {
             "type": "object",
@@ -201,6 +209,14 @@
                     "$ref": "#/definitions/count",
                     "$comment": "Not required because it does not appear in older statuses"
                 },
+                "quote_count": {
+                    "$ref": "#/definitions/count",
+                    "$comment": "Not required because it does not appear in some statuses"
+                },
+                "reply_count": {
+                    "$ref": "#/definitions/count",
+                    "$comment": "Not required because it does not appear in some statuses"
+                },
                 "extended_tweet": {
                     "$ref": "#/definitions/extended_tweet"
                 },
@@ -266,6 +282,10 @@
                 "possibly_sensitive": {
                     "type": "boolean"
                 },
+                "possibly_sensitive_editable": {
+                    "type": "boolean",
+                    "$comment": "Appears in some TSG 2012 status results"
+                },
                 "is_quote_status": {
                     "type": "boolean",
                     "$comment": "Not required because it does not appear in older statuses"
@@ -292,7 +312,18 @@
                     "$comment": "Not required because it does not appear in some statuses"
                 },
                 "contributors": {
-                    "type": "null"
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/id"
+                            }
+                        }
+                    ],
+                    "$comment": "Appears as a list of IDs in some TSG 2011 status results"
                 },
                 "geo": {
                     "oneOf": [
@@ -323,6 +354,48 @@
                             "$ref": "#/definitions/point"
                         }
                     ]
+                },
+                "activities": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "favoriters": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/id"
+                            }
+                        },
+                        "favoriters_count": {
+                            "$ref": "#/definitions/count_str"
+                        },
+                        "repliers": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/id"
+                            }
+                        },
+                        "repliers_count": {
+                            "$ref": "#/definitions/count_str"
+                        },
+                        "retweeters": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/id"
+                            }
+                        },
+                        "retweeters_count": {
+                            "$ref": "#/definitions/count_str"
+                        }
+                    },
+                    "required": [
+                        "favoriters",
+                        "favoriters_count",
+                        "repliers",
+                        "repliers_count",
+                        "retweeters_count",
+                        "retweeters"
+                    ],
+                    "$comment": "Appears in some TSG 2011 status results"
                 },
                 "metadata": {
                     "description": "Only included in search API results",
@@ -400,6 +473,15 @@
                     ],
                     "format": "uri"
                 },
+                "expanded_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "$commend": "Appears in some TSG 2011 status results"
+                },
+                "display_url": {
+                    "type": "string",
+                    "$commend": "Appears in some TSG 2011 status results"
+                },
                 "lang": {
                     "type": [
                         "string",
@@ -446,7 +528,11 @@
                     "type": "boolean"
                 },
                 "protected": {
-                    "type": "boolean"
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "$comment": "The null case seems very rare (some TSG 2011 status results)"
                 },
                 "default_profile": {
                     "type": "boolean"
@@ -509,24 +595,54 @@
                     "$comment": "Not required because it does not appear in older profiles"
                 },
                 "profile_text_color": {
-                    "type": "string",
-                    "pattern": "^[0-9a-fA-F]{6}$"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/color"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "profile_link_color": {
-                    "type": "string",
-                    "pattern": "^[0-9a-fA-F]{6}$"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/color"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "profile_background_color": {
-                    "type": "string",
-                    "pattern": "^[0-9a-fA-F]{6}$"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/color"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "profile_sidebar_fill_color": {
-                    "type": "string",
-                    "pattern": "^([0-9a-fA-F]{6})?$"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/color"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "profile_sidebar_border_color": {
-                    "type": "string",
-                    "pattern": "^[0-9a-fA-F]{6}$"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/color"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "notifications": {
                     "type": [
@@ -598,12 +714,22 @@
                             "required": [
                                 "urls"
                             ]
+                        },
+                        "hashtags": {
+                            "const": [],
+                            "$comment": "Appears in some TSG 2011 status results"
+                        },
+                        "urls": {
+                            "const": [],
+                            "$comment": "Appears in some TSG 2011 status results"
+                        },
+                        "user_mentions": {
+                            "const": [],
+                            "$comment": "Appears in some TSG 2011 status results"
                         }
                     },
-                    "required": [
-                        "description"
-                    ],
-                    "$comment": "Not required because it does not appear in older profiles"
+                    "required": [],
+                    "$comment": "Not required because it does not appear in some profiles"
                 },
                 "status": {
                     "$ref": "#/definitions/status"
@@ -701,16 +827,33 @@
             "additionalProperties": false,
             "properties": {
                 "id": {
-                    "$ref": "#/definitions/id"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/id"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "id_str": {
-                    "$ref": "#/definitions/id_str"
+                    "oneOf": [
+                        {
+                            "$ref": "#/definitions/id_str"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
                 },
                 "screen_name": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "indices": {
                     "$ref": "#/definitions/range"
@@ -864,6 +1007,10 @@
                         "video",
                         "animated_gif"
                     ]
+                },
+                "description": {
+                    "type": "string",
+                    "$comment": "Not required because it does not appear in some media objects"
                 },
                 "url": {
                     "type": "string",

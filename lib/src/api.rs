@@ -7,6 +7,48 @@ pub enum ApiObject {
     SearchResults(SearchResults),
     Deletion(Deletion),
 }
+#[derive(Clone, Debug, Serialize)]
+pub struct Color(String);
+impl std::ops::Deref for Color {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl std::convert::TryFrom<&str> for Color {
+    type Error = &'static str;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        if regress::Regex::new("^([0-9a-fA-F]{6}|[0-9a-fA-F]{3}|\\s)?$")
+            .unwrap()
+            .find(value)
+            .is_none()
+        {
+            return Err("doesn't match pattern \"^([0-9a-fA-F]{6}|[0-9a-fA-F]{3}|\\s)?$\"");
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl std::convert::TryFrom<&String> for Color {
+    type Error = &'static str;
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_str())
+    }
+}
+impl std::convert::TryFrom<String> for Color {
+    type Error = &'static str;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for Color {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Self::try_from(String::deserialize(deserializer)?)
+            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Coordinates(pub Vec<f64>);
 impl std::ops::Deref for Coordinates {
@@ -21,6 +63,44 @@ impl std::ops::Deref for Count {
     type Target = u32;
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+#[derive(Clone, Debug, Serialize)]
+pub struct CountStr(String);
+impl std::ops::Deref for CountStr {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl std::convert::TryFrom<&str> for CountStr {
+    type Error = &'static str;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        if regress::Regex::new("^\\d+$").unwrap().find(value).is_none() {
+            return Err("doesn't match pattern \"^\\d+$\"");
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl std::convert::TryFrom<&String> for CountStr {
+    type Error = &'static str;
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_str())
+    }
+}
+impl std::convert::TryFrom<String> for CountStr {
+    type Error = &'static str;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_str())
+    }
+}
+impl<'de> serde::Deserialize<'de> for CountStr {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Self::try_from(String::deserialize(deserializer)?)
+            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -214,6 +294,8 @@ impl std::ops::Deref for IdStrNullable {
 pub struct Media {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub additional_media_info: Option<MediaAdditionalMediaInfo>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     pub display_url: String,
     pub expanded_url: String,
     pub id: Id,
@@ -459,7 +541,9 @@ impl std::str::FromStr for SizeResize {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Status {
-    pub contributors: (),
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activities: Option<StatusActivities>,
+    pub contributors: Option<Vec<Id>>,
     pub coordinates: Option<Point>,
     pub created_at: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -495,6 +579,10 @@ pub struct Status {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub possibly_sensitive: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub possibly_sensitive_editable: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quote_count: Option<Count>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quoted_status: Option<Box<Status>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quoted_status_id: Option<Id>,
@@ -502,6 +590,8 @@ pub struct Status {
     pub quoted_status_id_str: Option<IdStr>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quoted_status_permalink: Option<StatusQuotedStatusPermalink>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reply_count: Option<Count>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub retweet_count: Option<StatusRetweetCount>,
     pub retweeted: bool,
@@ -527,6 +617,21 @@ pub struct Status {
 impl Status {
     pub fn builder() -> builder::Status {
         builder::Status::default()
+    }
+}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatusActivities {
+    pub favoriters: Vec<Id>,
+    pub favoriters_count: CountStr,
+    pub repliers: Vec<Id>,
+    pub repliers_count: CountStr,
+    pub retweeters: Vec<Id>,
+    pub retweeters_count: CountStr,
+}
+impl StatusActivities {
+    pub fn builder() -> builder::StatusActivities {
+        builder::StatusActivities::default()
     }
 }
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
@@ -694,7 +799,11 @@ pub struct User {
     pub default_profile_image: bool,
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_url: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<UserEntities>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expanded_url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ext_has_nft_avatar: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -719,7 +828,7 @@ pub struct User {
     pub location: Option<String>,
     pub name: String,
     pub notifications: Option<bool>,
-    pub profile_background_color: UserProfileBackgroundColor,
+    pub profile_background_color: Option<Color>,
     pub profile_background_image_url: Option<String>,
     pub profile_background_image_url_https: Option<String>,
     pub profile_background_tile: bool,
@@ -727,12 +836,12 @@ pub struct User {
     pub profile_banner_url: Option<String>,
     pub profile_image_url: String,
     pub profile_image_url_https: String,
-    pub profile_link_color: UserProfileLinkColor,
-    pub profile_sidebar_border_color: UserProfileSidebarBorderColor,
-    pub profile_sidebar_fill_color: UserProfileSidebarFillColor,
-    pub profile_text_color: UserProfileTextColor,
+    pub profile_link_color: Option<Color>,
+    pub profile_sidebar_border_color: Option<Color>,
+    pub profile_sidebar_fill_color: Option<Color>,
+    pub profile_text_color: Option<Color>,
     pub profile_use_background_image: bool,
-    pub protected: bool,
+    pub protected: Option<bool>,
     pub screen_name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub show_all_inline_media: Option<bool>,
@@ -761,9 +870,16 @@ impl User {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct UserEntities {
-    pub description: UserEntitiesDescription,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<UserEntitiesDescription>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hashtags: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub url: Option<UserEntitiesUrl>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub urls: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_mentions: Option<serde_json::Value>,
 }
 impl UserEntities {
     pub fn builder() -> builder::UserEntities {
@@ -819,225 +935,15 @@ impl std::str::FromStr for UserExtVerifiedType {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct UserMention {
-    pub id: Id,
-    pub id_str: IdStr,
+    pub id: Option<Id>,
+    pub id_str: Option<IdStr>,
     pub indices: Range,
-    pub name: String,
+    pub name: Option<String>,
     pub screen_name: String,
 }
 impl UserMention {
     pub fn builder() -> builder::UserMention {
         builder::UserMention::default()
-    }
-}
-#[derive(Clone, Debug, Serialize)]
-pub struct UserProfileBackgroundColor(String);
-impl std::ops::Deref for UserProfileBackgroundColor {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::convert::TryFrom<&str> for UserProfileBackgroundColor {
-    type Error = &'static str;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if regress::Regex::new("^[0-9a-fA-F]{6}$")
-            .unwrap()
-            .find(value)
-            .is_none()
-        {
-            return Err("doesn't match pattern \"^[0-9a-fA-F]{6}$\"");
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl std::convert::TryFrom<&String> for UserProfileBackgroundColor {
-    type Error = &'static str;
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl std::convert::TryFrom<String> for UserProfileBackgroundColor {
-    type Error = &'static str;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for UserProfileBackgroundColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Self::try_from(String::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
-    }
-}
-#[derive(Clone, Debug, Serialize)]
-pub struct UserProfileLinkColor(String);
-impl std::ops::Deref for UserProfileLinkColor {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::convert::TryFrom<&str> for UserProfileLinkColor {
-    type Error = &'static str;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if regress::Regex::new("^[0-9a-fA-F]{6}$")
-            .unwrap()
-            .find(value)
-            .is_none()
-        {
-            return Err("doesn't match pattern \"^[0-9a-fA-F]{6}$\"");
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl std::convert::TryFrom<&String> for UserProfileLinkColor {
-    type Error = &'static str;
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl std::convert::TryFrom<String> for UserProfileLinkColor {
-    type Error = &'static str;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for UserProfileLinkColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Self::try_from(String::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
-    }
-}
-#[derive(Clone, Debug, Serialize)]
-pub struct UserProfileSidebarBorderColor(String);
-impl std::ops::Deref for UserProfileSidebarBorderColor {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::convert::TryFrom<&str> for UserProfileSidebarBorderColor {
-    type Error = &'static str;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if regress::Regex::new("^[0-9a-fA-F]{6}$")
-            .unwrap()
-            .find(value)
-            .is_none()
-        {
-            return Err("doesn't match pattern \"^[0-9a-fA-F]{6}$\"");
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl std::convert::TryFrom<&String> for UserProfileSidebarBorderColor {
-    type Error = &'static str;
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl std::convert::TryFrom<String> for UserProfileSidebarBorderColor {
-    type Error = &'static str;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for UserProfileSidebarBorderColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Self::try_from(String::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
-    }
-}
-#[derive(Clone, Debug, Serialize)]
-pub struct UserProfileSidebarFillColor(String);
-impl std::ops::Deref for UserProfileSidebarFillColor {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::convert::TryFrom<&str> for UserProfileSidebarFillColor {
-    type Error = &'static str;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if regress::Regex::new("^([0-9a-fA-F]{6})?$")
-            .unwrap()
-            .find(value)
-            .is_none()
-        {
-            return Err("doesn't match pattern \"^([0-9a-fA-F]{6})?$\"");
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl std::convert::TryFrom<&String> for UserProfileSidebarFillColor {
-    type Error = &'static str;
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl std::convert::TryFrom<String> for UserProfileSidebarFillColor {
-    type Error = &'static str;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for UserProfileSidebarFillColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Self::try_from(String::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
-    }
-}
-#[derive(Clone, Debug, Serialize)]
-pub struct UserProfileTextColor(String);
-impl std::ops::Deref for UserProfileTextColor {
-    type Target = String;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl std::convert::TryFrom<&str> for UserProfileTextColor {
-    type Error = &'static str;
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        if regress::Regex::new("^[0-9a-fA-F]{6}$")
-            .unwrap()
-            .find(value)
-            .is_none()
-        {
-            return Err("doesn't match pattern \"^[0-9a-fA-F]{6}$\"");
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl std::convert::TryFrom<&String> for UserProfileTextColor {
-    type Error = &'static str;
-    fn try_from(value: &String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl std::convert::TryFrom<String> for UserProfileTextColor {
-    type Error = &'static str;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::try_from(value.as_str())
-    }
-}
-impl<'de> serde::Deserialize<'de> for UserProfileTextColor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        Self::try_from(String::deserialize(deserializer)?)
-            .map_err(|e| <D::Error as serde::de::Error>::custom(e.to_string()))
     }
 }
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
@@ -1524,6 +1430,7 @@ mod builder {
     }
     pub struct Media {
         additional_media_info: Result<Option<super::MediaAdditionalMediaInfo>, String>,
+        description: Result<Option<String>, String>,
         display_url: Result<String, String>,
         expanded_url: Result<String, String>,
         id: Result<super::Id, String>,
@@ -1544,6 +1451,7 @@ mod builder {
         fn default() -> Self {
             Self {
                 additional_media_info: Ok(Default::default()),
+                description: Ok(Default::default()),
                 display_url: Err("no value supplied for display_url".to_string()),
                 expanded_url: Err("no value supplied for expanded_url".to_string()),
                 id: Err("no value supplied for id".to_string()),
@@ -1574,6 +1482,16 @@ mod builder {
                     e
                 )
             });
+            self
+        }
+        pub fn description<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<String>>,
+            T::Error: std::fmt::Display,
+        {
+            self.description = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for description: {}", e));
             self
         }
         pub fn display_url<T>(mut self, value: T) -> Self
@@ -1741,6 +1659,7 @@ mod builder {
         fn try_from(value: Media) -> Result<Self, Self::Error> {
             Ok(Self {
                 additional_media_info: value.additional_media_info?,
+                description: value.description?,
                 display_url: value.display_url?,
                 expanded_url: value.expanded_url?,
                 id: value.id?,
@@ -2502,7 +2421,8 @@ mod builder {
         }
     }
     pub struct Status {
-        contributors: Result<(), String>,
+        activities: Result<Option<super::StatusActivities>, String>,
+        contributors: Result<Option<Vec<super::Id>>, String>,
         coordinates: Result<Option<super::Point>, String>,
         created_at: Result<String, String>,
         display_text_range: Result<Option<super::Range>, String>,
@@ -2526,10 +2446,13 @@ mod builder {
         metadata: Result<Option<super::StatusMetadata>, String>,
         place: Result<Option<super::Place>, String>,
         possibly_sensitive: Result<Option<bool>, String>,
+        possibly_sensitive_editable: Result<Option<bool>, String>,
+        quote_count: Result<Option<super::Count>, String>,
         quoted_status: Result<Option<Box<super::Status>>, String>,
         quoted_status_id: Result<Option<super::Id>, String>,
         quoted_status_id_str: Result<Option<super::IdStr>, String>,
         quoted_status_permalink: Result<Option<super::StatusQuotedStatusPermalink>, String>,
+        reply_count: Result<Option<super::Count>, String>,
         retweet_count: Result<Option<super::StatusRetweetCount>, String>,
         retweeted: Result<bool, String>,
         retweeted_status: Result<Option<Box<super::Status>>, String>,
@@ -2546,6 +2469,7 @@ mod builder {
     impl Default for Status {
         fn default() -> Self {
             Self {
+                activities: Ok(Default::default()),
                 contributors: Err("no value supplied for contributors".to_string()),
                 coordinates: Err("no value supplied for coordinates".to_string()),
                 created_at: Err("no value supplied for created_at".to_string()),
@@ -2578,10 +2502,13 @@ mod builder {
                 metadata: Ok(Default::default()),
                 place: Err("no value supplied for place".to_string()),
                 possibly_sensitive: Ok(Default::default()),
+                possibly_sensitive_editable: Ok(Default::default()),
+                quote_count: Ok(Default::default()),
                 quoted_status: Ok(Default::default()),
                 quoted_status_id: Ok(Default::default()),
                 quoted_status_id_str: Ok(Default::default()),
                 quoted_status_permalink: Ok(Default::default()),
+                reply_count: Ok(Default::default()),
                 retweet_count: Ok(Default::default()),
                 retweeted: Err("no value supplied for retweeted".to_string()),
                 retweeted_status: Ok(Default::default()),
@@ -2598,9 +2525,19 @@ mod builder {
         }
     }
     impl Status {
+        pub fn activities<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<super::StatusActivities>>,
+            T::Error: std::fmt::Display,
+        {
+            self.activities = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for activities: {}", e));
+            self
+        }
         pub fn contributors<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<()>,
+            T: std::convert::TryInto<Option<Vec<super::Id>>>,
             T::Error: std::fmt::Display,
         {
             self.contributors = value
@@ -2862,6 +2799,29 @@ mod builder {
             });
             self
         }
+        pub fn possibly_sensitive_editable<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<bool>>,
+            T::Error: std::fmt::Display,
+        {
+            self.possibly_sensitive_editable = value.try_into().map_err(|e| {
+                format!(
+                    "error converting supplied value for possibly_sensitive_editable: {}",
+                    e
+                )
+            });
+            self
+        }
+        pub fn quote_count<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<super::Count>>,
+            T::Error: std::fmt::Display,
+        {
+            self.quote_count = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for quote_count: {}", e));
+            self
+        }
         pub fn quoted_status<T>(mut self, value: T) -> Self
         where
             T: std::convert::TryInto<Option<Box<super::Status>>>,
@@ -2909,6 +2869,16 @@ mod builder {
                     e
                 )
             });
+            self
+        }
+        pub fn reply_count<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<super::Count>>,
+            T::Error: std::fmt::Display,
+        {
+            self.reply_count = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for reply_count: {}", e));
             self
         }
         pub fn retweet_count<T>(mut self, value: T) -> Self
@@ -3045,6 +3015,7 @@ mod builder {
         type Error = String;
         fn try_from(value: Status) -> Result<Self, Self::Error> {
             Ok(Self {
+                activities: value.activities?,
                 contributors: value.contributors?,
                 coordinates: value.coordinates?,
                 created_at: value.created_at?,
@@ -3069,10 +3040,13 @@ mod builder {
                 metadata: value.metadata?,
                 place: value.place?,
                 possibly_sensitive: value.possibly_sensitive?,
+                possibly_sensitive_editable: value.possibly_sensitive_editable?,
+                quote_count: value.quote_count?,
                 quoted_status: value.quoted_status?,
                 quoted_status_id: value.quoted_status_id?,
                 quoted_status_id_str: value.quoted_status_id_str?,
                 quoted_status_permalink: value.quoted_status_permalink?,
+                reply_count: value.reply_count?,
                 retweet_count: value.retweet_count?,
                 retweeted: value.retweeted?,
                 retweeted_status: value.retweeted_status?,
@@ -3085,6 +3059,107 @@ mod builder {
                 withheld_copyright: value.withheld_copyright?,
                 withheld_in_countries: value.withheld_in_countries?,
                 withheld_scope: value.withheld_scope?,
+            })
+        }
+    }
+    pub struct StatusActivities {
+        favoriters: Result<Vec<super::Id>, String>,
+        favoriters_count: Result<super::CountStr, String>,
+        repliers: Result<Vec<super::Id>, String>,
+        repliers_count: Result<super::CountStr, String>,
+        retweeters: Result<Vec<super::Id>, String>,
+        retweeters_count: Result<super::CountStr, String>,
+    }
+    impl Default for StatusActivities {
+        fn default() -> Self {
+            Self {
+                favoriters: Err("no value supplied for favoriters".to_string()),
+                favoriters_count: Err("no value supplied for favoriters_count".to_string()),
+                repliers: Err("no value supplied for repliers".to_string()),
+                repliers_count: Err("no value supplied for repliers_count".to_string()),
+                retweeters: Err("no value supplied for retweeters".to_string()),
+                retweeters_count: Err("no value supplied for retweeters_count".to_string()),
+            }
+        }
+    }
+    impl StatusActivities {
+        pub fn favoriters<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Vec<super::Id>>,
+            T::Error: std::fmt::Display,
+        {
+            self.favoriters = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for favoriters: {}", e));
+            self
+        }
+        pub fn favoriters_count<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<super::CountStr>,
+            T::Error: std::fmt::Display,
+        {
+            self.favoriters_count = value.try_into().map_err(|e| {
+                format!(
+                    "error converting supplied value for favoriters_count: {}",
+                    e
+                )
+            });
+            self
+        }
+        pub fn repliers<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Vec<super::Id>>,
+            T::Error: std::fmt::Display,
+        {
+            self.repliers = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for repliers: {}", e));
+            self
+        }
+        pub fn repliers_count<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<super::CountStr>,
+            T::Error: std::fmt::Display,
+        {
+            self.repliers_count = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for repliers_count: {}", e));
+            self
+        }
+        pub fn retweeters<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Vec<super::Id>>,
+            T::Error: std::fmt::Display,
+        {
+            self.retweeters = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for retweeters: {}", e));
+            self
+        }
+        pub fn retweeters_count<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<super::CountStr>,
+            T::Error: std::fmt::Display,
+        {
+            self.retweeters_count = value.try_into().map_err(|e| {
+                format!(
+                    "error converting supplied value for retweeters_count: {}",
+                    e
+                )
+            });
+            self
+        }
+    }
+    impl std::convert::TryFrom<StatusActivities> for super::StatusActivities {
+        type Error = String;
+        fn try_from(value: StatusActivities) -> Result<Self, Self::Error> {
+            Ok(Self {
+                favoriters: value.favoriters?,
+                favoriters_count: value.favoriters_count?,
+                repliers: value.repliers?,
+                repliers_count: value.repliers_count?,
+                retweeters: value.retweeters?,
+                retweeters_count: value.retweeters_count?,
             })
         }
     }
@@ -3351,7 +3426,9 @@ mod builder {
         default_profile: Result<bool, String>,
         default_profile_image: Result<bool, String>,
         description: Result<Option<String>, String>,
+        display_url: Result<Option<String>, String>,
         entities: Result<Option<super::UserEntities>, String>,
+        expanded_url: Result<Option<String>, String>,
         ext_has_nft_avatar: Result<Option<bool>, String>,
         ext_is_blue_verified: Result<Option<bool>, String>,
         ext_verified_type: Result<Option<super::UserExtVerifiedType>, String>,
@@ -3371,19 +3448,19 @@ mod builder {
         location: Result<Option<String>, String>,
         name: Result<String, String>,
         notifications: Result<Option<bool>, String>,
-        profile_background_color: Result<super::UserProfileBackgroundColor, String>,
+        profile_background_color: Result<Option<super::Color>, String>,
         profile_background_image_url: Result<Option<String>, String>,
         profile_background_image_url_https: Result<Option<String>, String>,
         profile_background_tile: Result<bool, String>,
         profile_banner_url: Result<Option<String>, String>,
         profile_image_url: Result<String, String>,
         profile_image_url_https: Result<String, String>,
-        profile_link_color: Result<super::UserProfileLinkColor, String>,
-        profile_sidebar_border_color: Result<super::UserProfileSidebarBorderColor, String>,
-        profile_sidebar_fill_color: Result<super::UserProfileSidebarFillColor, String>,
-        profile_text_color: Result<super::UserProfileTextColor, String>,
+        profile_link_color: Result<Option<super::Color>, String>,
+        profile_sidebar_border_color: Result<Option<super::Color>, String>,
+        profile_sidebar_fill_color: Result<Option<super::Color>, String>,
+        profile_text_color: Result<Option<super::Color>, String>,
         profile_use_background_image: Result<bool, String>,
-        protected: Result<bool, String>,
+        protected: Result<Option<bool>, String>,
         screen_name: Result<String, String>,
         show_all_inline_media: Result<Option<bool>, String>,
         snapshot: Result<Option<u64>, String>,
@@ -3407,7 +3484,9 @@ mod builder {
                     "no value supplied for default_profile_image".to_string()
                 ),
                 description: Err("no value supplied for description".to_string()),
+                display_url: Ok(Default::default()),
                 entities: Ok(Default::default()),
+                expanded_url: Ok(Default::default()),
                 ext_has_nft_avatar: Ok(Default::default()),
                 ext_is_blue_verified: Ok(Default::default()),
                 ext_verified_type: Ok(Default::default()),
@@ -3528,6 +3607,16 @@ mod builder {
                 .map_err(|e| format!("error converting supplied value for description: {}", e));
             self
         }
+        pub fn display_url<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<String>>,
+            T::Error: std::fmt::Display,
+        {
+            self.display_url = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for display_url: {}", e));
+            self
+        }
         pub fn entities<T>(mut self, value: T) -> Self
         where
             T: std::convert::TryInto<Option<super::UserEntities>>,
@@ -3536,6 +3625,16 @@ mod builder {
             self.entities = value
                 .try_into()
                 .map_err(|e| format!("error converting supplied value for entities: {}", e));
+            self
+        }
+        pub fn expanded_url<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<String>>,
+            T::Error: std::fmt::Display,
+        {
+            self.expanded_url = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for expanded_url: {}", e));
             self
         }
         pub fn ext_has_nft_avatar<T>(mut self, value: T) -> Self
@@ -3751,7 +3850,7 @@ mod builder {
         }
         pub fn profile_background_color<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserProfileBackgroundColor>,
+            T: std::convert::TryInto<Option<super::Color>>,
             T::Error: std::fmt::Display,
         {
             self.profile_background_color = value.try_into().map_err(|e| {
@@ -3842,7 +3941,7 @@ mod builder {
         }
         pub fn profile_link_color<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserProfileLinkColor>,
+            T: std::convert::TryInto<Option<super::Color>>,
             T::Error: std::fmt::Display,
         {
             self.profile_link_color = value.try_into().map_err(|e| {
@@ -3855,7 +3954,7 @@ mod builder {
         }
         pub fn profile_sidebar_border_color<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserProfileSidebarBorderColor>,
+            T: std::convert::TryInto<Option<super::Color>>,
             T::Error: std::fmt::Display,
         {
             self.profile_sidebar_border_color = value.try_into().map_err(|e| {
@@ -3868,7 +3967,7 @@ mod builder {
         }
         pub fn profile_sidebar_fill_color<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserProfileSidebarFillColor>,
+            T: std::convert::TryInto<Option<super::Color>>,
             T::Error: std::fmt::Display,
         {
             self.profile_sidebar_fill_color = value.try_into().map_err(|e| {
@@ -3881,7 +3980,7 @@ mod builder {
         }
         pub fn profile_text_color<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserProfileTextColor>,
+            T: std::convert::TryInto<Option<super::Color>>,
             T::Error: std::fmt::Display,
         {
             self.profile_text_color = value.try_into().map_err(|e| {
@@ -3907,7 +4006,7 @@ mod builder {
         }
         pub fn protected<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<bool>,
+            T: std::convert::TryInto<Option<bool>>,
             T::Error: std::fmt::Display,
         {
             self.protected = value
@@ -4051,7 +4150,9 @@ mod builder {
                 default_profile: value.default_profile?,
                 default_profile_image: value.default_profile_image?,
                 description: value.description?,
+                display_url: value.display_url?,
                 entities: value.entities?,
+                expanded_url: value.expanded_url?,
                 ext_has_nft_avatar: value.ext_has_nft_avatar?,
                 ext_is_blue_verified: value.ext_is_blue_verified?,
                 ext_verified_type: value.ext_verified_type?,
@@ -4100,26 +4201,42 @@ mod builder {
         }
     }
     pub struct UserEntities {
-        description: Result<super::UserEntitiesDescription, String>,
+        description: Result<Option<super::UserEntitiesDescription>, String>,
+        hashtags: Result<Option<serde_json::Value>, String>,
         url: Result<Option<super::UserEntitiesUrl>, String>,
+        urls: Result<Option<serde_json::Value>, String>,
+        user_mentions: Result<Option<serde_json::Value>, String>,
     }
     impl Default for UserEntities {
         fn default() -> Self {
             Self {
-                description: Err("no value supplied for description".to_string()),
+                description: Ok(Default::default()),
+                hashtags: Ok(Default::default()),
                 url: Ok(Default::default()),
+                urls: Ok(Default::default()),
+                user_mentions: Ok(Default::default()),
             }
         }
     }
     impl UserEntities {
         pub fn description<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::UserEntitiesDescription>,
+            T: std::convert::TryInto<Option<super::UserEntitiesDescription>>,
             T::Error: std::fmt::Display,
         {
             self.description = value
                 .try_into()
                 .map_err(|e| format!("error converting supplied value for description: {}", e));
+            self
+        }
+        pub fn hashtags<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<serde_json::Value>>,
+            T::Error: std::fmt::Display,
+        {
+            self.hashtags = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for hashtags: {}", e));
             self
         }
         pub fn url<T>(mut self, value: T) -> Self
@@ -4132,13 +4249,36 @@ mod builder {
                 .map_err(|e| format!("error converting supplied value for url: {}", e));
             self
         }
+        pub fn urls<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<serde_json::Value>>,
+            T::Error: std::fmt::Display,
+        {
+            self.urls = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for urls: {}", e));
+            self
+        }
+        pub fn user_mentions<T>(mut self, value: T) -> Self
+        where
+            T: std::convert::TryInto<Option<serde_json::Value>>,
+            T::Error: std::fmt::Display,
+        {
+            self.user_mentions = value
+                .try_into()
+                .map_err(|e| format!("error converting supplied value for user_mentions: {}", e));
+            self
+        }
     }
     impl std::convert::TryFrom<UserEntities> for super::UserEntities {
         type Error = String;
         fn try_from(value: UserEntities) -> Result<Self, Self::Error> {
             Ok(Self {
                 description: value.description?,
+                hashtags: value.hashtags?,
                 url: value.url?,
+                urls: value.urls?,
+                user_mentions: value.user_mentions?,
             })
         }
     }
@@ -4199,10 +4339,10 @@ mod builder {
         }
     }
     pub struct UserMention {
-        id: Result<super::Id, String>,
-        id_str: Result<super::IdStr, String>,
+        id: Result<Option<super::Id>, String>,
+        id_str: Result<Option<super::IdStr>, String>,
         indices: Result<super::Range, String>,
-        name: Result<String, String>,
+        name: Result<Option<String>, String>,
         screen_name: Result<String, String>,
     }
     impl Default for UserMention {
@@ -4219,7 +4359,7 @@ mod builder {
     impl UserMention {
         pub fn id<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::Id>,
+            T: std::convert::TryInto<Option<super::Id>>,
             T::Error: std::fmt::Display,
         {
             self.id = value
@@ -4229,7 +4369,7 @@ mod builder {
         }
         pub fn id_str<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<super::IdStr>,
+            T: std::convert::TryInto<Option<super::IdStr>>,
             T::Error: std::fmt::Display,
         {
             self.id_str = value
@@ -4249,7 +4389,7 @@ mod builder {
         }
         pub fn name<T>(mut self, value: T) -> Self
         where
-            T: std::convert::TryInto<String>,
+            T: std::convert::TryInto<Option<String>>,
             T::Error: std::fmt::Display,
         {
             self.name = value
